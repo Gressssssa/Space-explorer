@@ -26,8 +26,11 @@ export default async function Home() {
 
     const baseUrl = process.env.VERCEL_URL
         ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000";
+    : "http://localhost:3000";
 
+let neoData = null;
+
+try {
     const neoResponse = await fetch(
         `${baseUrl}/api/neo?start_date=${today}&end_date=${today}`,
         {
@@ -35,178 +38,161 @@ export default async function Home() {
         }
     );
 
-    if (!neoResponse.ok) {
-        return (
-            <main className="mx-auto max-w-6xl">
-                <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6">
-                    <h1 className="text-xl font-semibold">
-                        Space Explorer Dashboard
-                    </h1>
-
-                    <p className="mt-2 text-sm text-red-400">
-                        Something went wrong loading near-Earth object data.
-                    </p>
-                </div>
-            </main>
-        );
+    if (neoResponse.ok) {
+        neoData = await neoResponse.json();
     }
+} catch (error) {
+    console.error("Failed to load NEO data:", error);
+}
 
-    const neoData = await neoResponse.json();
+const asteroids =
+    neoData?.near_earth_objects?.[today] || [];
 
-    const neoDate = today;
+const chartData = asteroids.map((asteroid: any) => ({
+    name: asteroid.name,
+    diameter:
+    asteroid.estimated_diameter.meters
+        .estimated_diameter_max,
+}));
 
-    const asteroids =
-        neoData.near_earth_objects[neoDate] || [];
+return (
+    <main className="mx-auto max-w-6xl space-y-10">
 
-    const chartData = asteroids.map((asteroid: any) => ({
-        name: asteroid.name,
-        diameter:
-        asteroid.estimated_diameter.meters
-            .estimated_diameter_max,
-    }));
+        <div>
+            <h1 className="mt-2 text-4xl font-bold tracking-tight">
+                Space Explorer Dashboard
+            </h1>
+        </div>
 
-    return (
-        <main className="mx-auto max-w-6xl space-y-10">
-
-            <div>
-                <h1 className="mt-2 text-4xl font-bold tracking-tight">
-                    Space Explorer Dashboard
-                </h1>
+        <section>
+            <div className="mb-4">
+                <p className="text-sm font-medium uppercase tracking-wider text-gray-500">
+                    Your collection
+                </p>
             </div>
 
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 
-            <section>
-                <div className="mb-4">
-                    <p className="text-sm font-medium uppercase tracking-wider text-gray-500">
-                        Your collection
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+                    <p className="text-sm text-gray-500">
+                        Total Favorites
+                    </p>
+
+                    <p className="mt-2 text-3xl font-bold text-white">
+                        {totalFavorites}
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+                    <p className="text-sm text-gray-500">
+                        APOD Favorites
+                    </p>
 
-                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
-                        <p className="text-sm text-gray-500">
-                            Total Favorites
-                        </p>
-
-                        <p className="mt-2 text-3xl font-bold text-white">
-                            {totalFavorites}
-                        </p>
-                    </div>
-
-
-                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
-                        <p className="text-sm text-gray-500">
-                            APOD Favorites
-                        </p>
-
-                        <p className="mt-2 text-3xl font-bold text-white">
-                            {apodFavorites}
-                        </p>
-                    </div>
-
-
-                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
-                        <p className="text-sm text-gray-500">
-                            NASA Library
-                        </p>
-
-                        <p className="mt-2 text-3xl font-bold text-white">
-                            {nasaLibraryFavorites}
-                        </p>
-                    </div>
-
-                </div>
-            </section>
-
-
-            <section>
-                <div className="mb-4">                    <h2 className="mt-1 text-2xl font-semibold">
-                        Near-Earth Objects
-                    </h2>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                        Asteroids discovered near Earth on {neoDate}.
+                    <p className="mt-2 text-3xl font-bold text-white">
+                        {apodFavorites}
                     </p>
                 </div>
 
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
-                    {chartData.length > 0 ? (
-                        <NeoChart data={chartData} />
-                    ) : (
-                        <div className="py-10 text-center">
-                            <p className="text-sm text-gray-500">
-                                No near-Earth objects found.
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </section>
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+                    <p className="text-sm text-gray-500">
+                        NASA Library
+                    </p>
 
-            <section>
-                <div className="mb-4 flex items-end justify-between">
-                    <div>
-                        <p className="text-sm font-medium uppercase tracking-wider text-gray-500">
-                            Recently saved
-                        </p>
-
-                        <h2 className="mt-1 text-2xl font-semibold">
-                            Recent Favorites
-                        </h2>
-                    </div>
+                    <p className="mt-2 text-3xl font-bold text-white">
+                        {nasaLibraryFavorites}
+                    </p>
                 </div>
 
-                {recentFavorites.length > 0 ? (
-                    <div className="columns-1 gap-5 sm:columns-2 lg:columns-3">
+            </div>
+        </section>
 
-                        {recentFavorites.map((favorite) => (
-                            <article
-                                key={favorite.id}
-                                className="mb-5 break-inside-avoid overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.05]"
-                            >
+        <section>
+            <div className="mb-4">
+                <h2 className="mt-1 text-2xl font-semibold">
+                    Near-Earth Objects
+                </h2>
 
-                                <div className="overflow-hidden bg-black">
-                                    <img
-                                        src={favorite.imageUrl}
-                                        alt={favorite.title}
-                                        className="block h-auto w-full object-cover transition duration-500 hover:scale-105"
-                                    />
-                                </div>
-                                <div className="p-4">
+                <p className="mt-1 text-sm text-gray-500">
+                    Asteroids discovered near Earth on {today}.
+                </p>
+            </div>
 
-                                    <p className="text-xs font-medium uppercase tracking-wider text-blue-400">
-                                        {favorite.source}
-                                    </p>
-
-                                    <h3 className="mt-2 line-clamp-2 text-sm font-semibold leading-5 text-white">
-                                        {favorite.title}
-                                    </h3>
-
-                                </div>
-
-                            </article>
-                        ))}
-
-                    </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
+                {chartData.length > 0 ? (
+                    <NeoChart data={chartData} />
                 ) : (
-                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-10 text-center">
-
-                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-xl">
-                            ☆
-                        </div>
-
-                        <h3 className="mt-4 text-lg font-semibold">
-                            No favorites yet
-                        </h3>
-
-                        <p className="mt-2 text-sm text-gray-500">
-                            Explore NASA's collection and save something interesting.
+                    <div className="py-10 text-center">
+                        <p className="text-sm text-gray-500">
+                            No near-Earth objects found.
                         </p>
-
                     </div>
                 )}
-            </section>
+            </div>
+        </section>
 
-        </main>
-    );
+        <section>
+            <div className="mb-4 flex items-end justify-between">
+                <div>
+                    <p className="text-sm font-medium uppercase tracking-wider text-gray-500">
+                        Recently saved
+                    </p>
+
+                    <h2 className="mt-1 text-2xl font-semibold">
+                        Recent Favorites
+                    </h2>
+                </div>
+            </div>
+
+            {recentFavorites.length > 0 ? (
+                <div className="columns-1 gap-5 sm:columns-2 lg:columns-3">
+
+                    {recentFavorites.map((favorite) => (
+                        <article
+                            key={favorite.id}
+                            className="mb-5 break-inside-avoid overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.05]"
+                        >
+                            <div className="overflow-hidden bg-black">
+                                <img
+                                    src={favorite.imageUrl}
+                                    alt={favorite.title}
+                                    className="block h-auto w-full object-cover transition duration-500 hover:scale-105"
+                                />
+                            </div>
+
+                            <div className="p-4">
+
+                                <p className="text-xs font-medium uppercase tracking-wider text-blue-400">
+                                    {favorite.source}
+                                </p>
+
+                                <h3 className="mt-2 line-clamp-2 text-sm font-semibold leading-5 text-white">
+                                    {favorite.title}
+                                </h3>
+
+                            </div>
+                        </article>
+                    ))}
+
+                </div>
+            ) : (
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-10 text-center">
+
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-xl">
+                        ☆
+                    </div>
+
+                    <h3 className="mt-4 text-lg font-semibold">
+                        No favorites yet
+                    </h3>
+
+                    <p className="mt-2 text-sm text-gray-500">
+                        Explore NASA&apos;s collection and save something interesting.
+                    </p>
+
+                </div>
+            )}
+        </section>
+
+    </main>
+);
 }
