@@ -7,7 +7,10 @@ interface Favorite {
     source: string;
     imageUrl: string;
     title: string;
-    description?: string;
+    description: string | null;
+    metadata: any;
+    note: string | null;
+    createdAt: Date;
 }
 
 interface FavoriteCardProps {

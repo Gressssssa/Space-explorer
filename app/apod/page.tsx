@@ -11,18 +11,26 @@ export default async function Page({
     const date =
         params.date || new Date().toISOString().split("T")[0];
 
-    const baseUrl = process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000";
+    const apiKey = process.env.NASA_API_KEY;
 
-    const response = await fetch(
-        `${baseUrl}/api/apod?date=${date}`,
-        {
-            cache: "no-store",
+    let data;
+
+    try {
+        const response = await fetch(
+            `https://api.nasa.gov/planetary/apod?api_key=${apiKey}&date=${date}`,
+            {
+                cache: "no-store",
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("NASA API request failed");
         }
-    );
 
-    if (!response.ok) {
+        data = await response.json();
+    } catch (error) {
+        console.error("Failed to load APOD:", error);
+
         return (
             <main className="mx-auto max-w-5xl">
                 <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6 text-red-400">
@@ -31,8 +39,6 @@ export default async function Page({
             </main>
         );
     }
-
-    const data = await response.json();
 
     return (
         <main className="mx-auto max-w-5xl space-y-8">
@@ -70,6 +76,7 @@ export default async function Page({
                     </div>
 
                     <div className="mt-6 border-t border-white/10 pt-6">
+
                         <h3 className="text-sm font-medium uppercase tracking-wider text-gray-500">
                             About this image
                         </h3>
@@ -77,6 +84,7 @@ export default async function Page({
                         <p className="mt-3 text-sm leading-7 text-gray-400">
                             {data.explanation}
                         </p>
+
                     </div>
 
                 </div>
