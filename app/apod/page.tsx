@@ -7,12 +7,30 @@ export default async function Page({
     searchParams: Promise<{ date?: string }>;
 }) {
     const params = await searchParams;
-    const date = params.date || new Date().toISOString().split("T")[0];
+
+    const date =
+        params.date || new Date().toISOString().split("T")[0];
+
+    const baseUrl = process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000";
 
     const response = await fetch(
-        `http://localhost:3000/api/apod?date=${date}`,
-        { cache: "no-store" }
+        `${baseUrl}/api/apod?date=${date}`,
+        {
+            cache: "no-store",
+        }
     );
+
+    if (!response.ok) {
+        return (
+            <main className="mx-auto max-w-5xl">
+                <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6 text-red-400">
+                    Something went wrong loading the Astronomy Picture of the Day.
+                </div>
+            </main>
+        );
+    }
 
     const data = await response.json();
 
