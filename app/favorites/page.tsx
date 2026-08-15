@@ -1,6 +1,8 @@
 import FavoriteCard from "./FavoriteCard";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function FavoritesPage() {
     let favorites;
 
@@ -74,7 +76,6 @@ export default async function FavoritesPage() {
                     </div>
                 </section>
             )}
-
         </main>
     );
 }
