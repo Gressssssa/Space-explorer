@@ -24,8 +24,12 @@ export default async function Home() {
 
     const today = new Date().toISOString().split("T")[0];
 
+    const baseUrl = process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000";
+
     const neoResponse = await fetch(
-        `http://localhost:3000/api/neo?start_date=${today}&end_date=${today}`,
+        `${baseUrl}/api/neo?start_date=${today}&end_date=${today}`,
         {
             cache: "no-store",
         }
