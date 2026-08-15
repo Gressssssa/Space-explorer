@@ -4,29 +4,52 @@ export async function GET(request: Request) {
     try {
         const apiKey = process.env.NASA_API_KEY;
 
-        const { searchParams } = new URL(request.url);
-
-        const date = searchParams.get("date");
-
-        const url = `https://api.nasa.gov/planetary/apod?api_key=${apiKey}&date=${date}`;
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
+        if (!apiKey) {
             return NextResponse.json(
-                { error: "Failed to fetch data from NASA" },
-                { status: response.status }
+                { error: "NASA_API_KEY is missing" },
+                { status: 500 }
             );
         }
 
-        const data = await response.json();
+        const { searchParams } = new URL(request.url);
 
-        return NextResponse.json(data);
+        const date =
+            searchParams.get("date") ||
+            new Date().toISOString().split("T")[0];
 
-    } catch (error) {
-        return NextResponse.json(
-            { error: "Something went wrong" },
-            { status: 500 }
-        );
-    }
+        const url =
+            `https://api.nasa.gov/planetary/apod` +
+    `?api_key=${apiKey}` +
+    `&date=${date}`;
+
+const response = await fetch(url, {
+    cache: "no-store",
+});
+
+const data = await response.json();
+
+if (!response.ok) {
+    console.error("NASA APOD ERROR:", data);
+
+    return NextResponse.json(
+        {
+            error: "NASA API request failed",
+            details: data,
+        },
+        { status: response.status }
+    );
+}
+
+return NextResponse.json(data);
+
+} catch (error) {
+    console.error("APOD ROUTE ERROR:", error);
+
+    return NextResponse.json(
+        {
+            error: "Something went wrong",
+        },
+        { status: 500 }
+    );
+}
 }
