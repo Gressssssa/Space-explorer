@@ -21,17 +21,34 @@ export default function FavoriteCard({
                                          favorite,
                                      }: FavoriteCardProps) {
     const [deleted, setDeleted] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     const handleDelete = async () => {
-        const response = await fetch(
-            `/api/favorites/${favorite.id}`,
-            {
-                method: "DELETE",
-            }
-        );
+        if (deleting) return;
 
-        if (response.ok) {
-            setDeleted(true);
+        setDeleting(true);
+
+        try {
+            const response = await fetch(
+                `/api/favorites/${favorite.id}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            if (response.ok) {
+                setDeleted(true);
+            } else {
+                const data = await response.json();
+
+                console.error("Delete failed:", data);
+
+                setDeleting(false);
+            }
+        } catch (error) {
+            console.error("Delete request failed:", error);
+
+            setDeleting(false);
         }
     };
 
@@ -70,9 +87,10 @@ export default function FavoriteCard({
 
                     <button
                         onClick={handleDelete}
-                        className="flex-1 rounded-lg bg-white/5 px-3 py-2 text-sm font-medium text-gray-400 transition hover:bg-red-500/10 hover:text-red-400"
+                        disabled={deleting}
+                        className="flex-1 rounded-lg bg-white/5 px-3 py-2 text-sm font-medium text-gray-400 transition hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        Delete
+                        {deleting ? "Deleting..." : "Delete"}
                     </button>
 
                 </div>

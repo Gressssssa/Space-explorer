@@ -10,7 +10,7 @@ export async function GET(
 
         const favorite = await prisma.favoritePhoto.findUnique({
             where: {
-                id: id,
+                id,
             },
         });
 
@@ -33,23 +33,23 @@ export async function GET(
     }
 }
 
-
 export async function PATCH(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params;
+
         const body = await request.json();
 
         const { note } = body;
 
         const favorite = await prisma.favoritePhoto.update({
             where: {
-                id: id,
+                id,
             },
             data: {
-                note: note,
+                note,
             },
         });
 
@@ -65,7 +65,6 @@ export async function PATCH(
     }
 }
 
-
 export async function DELETE(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
@@ -73,11 +72,30 @@ export async function DELETE(
     try {
         const { id } = await params;
 
-        await prisma.favoritePhoto.delete({
+        console.log("DELETE requested for:", id);
+
+        const favorite = await prisma.favoritePhoto.findUnique({
             where: {
-                id: id,
+                id,
             },
         });
+
+        if (!favorite) {
+            console.log("Favorite not found:", id);
+
+            return NextResponse.json(
+                { error: "Favorite not found" },
+                { status: 404 }
+            );
+        }
+
+        await prisma.favoritePhoto.delete({
+            where: {
+                id,
+            },
+        });
+
+        console.log("Successfully deleted:", id);
 
         return NextResponse.json({
             message: "Favorite deleted successfully",
